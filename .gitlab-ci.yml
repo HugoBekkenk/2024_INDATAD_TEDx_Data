@@ -1,0 +1,23 @@
+stages:          # List of stages for jobs, and their order of execution
+  - build
+
+build-job:       # This job runs in the build stage, which runs first.
+  stage: build
+  image: docker:26.1.4-cli
+  services:
+    - docker:dind
+  variables:
+      DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u "$DOCKER_HUB_USERNAME" -p "$DOCKER_HUB_PASSWORD"
+  script:
+    - cat $ENVIROMENT_FILE > .env
+    - cat .env
+    - docker build 
+      --build-arg DB_NAME="${DB_NAME}" 
+      --build-arg DB_USER="${DB_USER}" 
+      --build-arg DB_HOST="${DB_HOST}" 
+      --build-arg DB_PASSWORD="${DB_PASSWORD}"
+      --build-arg API_KEY="${API_KEY}" 
+      --pull -t "$DOCKER_IMAGE_NAME" .
+    - docker push "$DOCKER_IMAGE_NAME"
